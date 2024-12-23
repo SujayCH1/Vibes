@@ -1,28 +1,70 @@
-import { Button, FlatList, StyleSheet, Text, View, TouchableOpacity } from 'react-native';
-import React, { useContext, useState } from 'react';
+import { FlatList, StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import React, { useContext, useEffect, useState } from 'react';
 import { AudioListContext } from '../context/AudioTracksContext';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import { PlayerRouteParams, AudioTrack } from '../types/types';
 import { PlaylistContext } from '../context/PlaylistContext';
+import { Audio } from 'expo-av';
+import Icon from 'react-native-vector-icons/Feather';
 
 const Player = () => {
   const route = useRoute<RouteProp<{ params: PlayerRouteParams }, 'params'>>();
   const { trackID } = route.params;
-  const navigation = useNavigation(); // Access the navigation object
+  const navigation = useNavigation();
   const tracks = useContext(AudioListContext);
   const [addState, setAddState] = useState(false);
   const playlists = useContext(PlaylistContext);
+  const [sound, setSound] = useState<Audio.Sound | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTrackID, setCurrentTrackID] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  if (!trackID) {
-    return <Text style={styles.noTracksText}>Track ID not available</Text>;
-  }
+  useEffect(() => {
+    const initAudio = async () => {
+      try {
+        await Audio.setAudioModeAsync({
+          allowsRecordingIOS: false,
+          staysActiveInBackground: true,
+          playsInSilentModeIOS: true,
+          shouldDuckAndroid: true,
+          playThroughEarpieceAndroid: false,
+        });
+      } catch (error) {
+        console.error('Error initializing audio:', error);
+      }
+    };
 
-  if (!tracks) {
-    return <Text style={styles.noTracksText}>Tracks not available</Text>;
-  }
+    initAudio();
+  }, []);
 
-  if (!playlists) {
-    return <Text>Playlists not found</Text>;
+  useEffect(() => {
+    const handleTrackChange = async () => {
+      if (trackID !== currentTrackID) {
+        if (sound) {
+          setIsLoading(true);
+          await sound.stopAsync();
+          await sound.unloadAsync();
+          setSound(null);
+          setIsPlaying(false);
+          setIsLoading(false);
+        }
+        setCurrentTrackID(trackID);
+      }
+    };
+
+    handleTrackChange();
+  }, [trackID, currentTrackID, sound]);
+
+  useEffect(() => {
+    return () => {
+      if (sound) {
+        sound.unloadAsync();
+      }
+    };
+  }, [sound]);
+
+  if (!trackID || !tracks || !playlists) {
+    return <Text style={styles.noTracksText}>Content not available</Text>;
   }
 
   const { audioList } = tracks;
@@ -34,55 +76,129 @@ const Player = () => {
     return <Text style={styles.noTracksText}>Track not found</Text>;
   }
 
+  const handlePlayPause = async () => {
+    try {
+      if (!playTrack.trackUrl) {
+        console.error('Error: Invalid track URL');
+        return;
+      }
+
+      setIsLoading(true);
+
+      if (currentTrackID !== trackID) {
+        if (sound) {
+          await sound.stopAsync();
+          await sound.unloadAsync();
+          setSound(null);
+        }
+        setCurrentTrackID(trackID);
+      }
+
+      if (sound === null) {
+        const { sound: newSound } = await Audio.Sound.createAsync(
+          playTrack.trackUrl,
+          { shouldPlay: true }
+        );
+
+        newSound.setOnPlaybackStatusUpdate(async (status) => {
+          if (status.isLoaded) {
+            if (status.didJustFinish) {
+              setIsPlaying(false);
+            }
+          }
+        });
+
+        setSound(newSound);
+        setIsPlaying(true);
+      } else {
+        if (isPlaying) {
+          await sound.pauseAsync();
+        } else {
+          await sound.playAsync();
+        }
+        setIsPlaying(!isPlaying);
+      }
+    } catch (error) {
+      console.error('Error handling playback:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleAdd = () => {
-    setAddState(!addState); // Toggle the add state to show/hide playlist
+    setAddState(!addState);
   };
 
   const handleAddPlaylist = (PID: number) => {
-    const selectedPlaylist = playlistData.find((playlist) => playlist.playlistID == PID);
+    const selectedPlaylist = playlistData.find((playlist) => playlist.playlistID === PID);
 
     if (!selectedPlaylist) {
-      console.log('Playlist not found');
       return;
     }
 
     const updatedPlaylist = {
       ...selectedPlaylist,
-      Playlist: [...selectedPlaylist.Playlist, playTrack], // Add the selected track
+      Playlist: [...selectedPlaylist.Playlist, playTrack],
     };
 
-    // Update the playlists context
     setPlayListData(
       playlistData.map((playlist) =>
         playlist.playlistID === PID ? updatedPlaylist : playlist
       )
     );
 
-    setAddState(false); // Close the playlist menu after adding
+    setAddState(false);
   };
 
   return (
     <View style={styles.container}>
-      {/* Back Button */}
       <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-        <Text style={styles.backButtonText}>Back</Text>
+        <Icon name="chevron-left" size={24} color="#00Aaff" />
       </TouchableOpacity>
 
-      {/* Track Info */}
-      <Text style={styles.trackName}>{playTrack.trackName}</Text>
-      <Text style={styles.artistName}>{playTrack.artist}</Text>
-      <Button title="Add to playlist" onPress={handleAdd} />
+      <View style={styles.trackArt}>
+        <Text style={styles.trackArtText}>{playTrack.trackName[0]}</Text>
+      </View>
 
-      {/* Playlist Add Menu */}
+      <View style={styles.infoContainer}>
+        <Text style={styles.trackName}>{playTrack.trackName}</Text>
+        <Text style={styles.artistName}>{playTrack.artist}</Text>
+      </View>
+
+      <View style={styles.controls}>
+        <TouchableOpacity 
+          style={[styles.playButton, isLoading && styles.disabledButton]}
+          onPress={handlePlayPause}
+          disabled={isLoading}
+        >
+          <Icon 
+            name={isPlaying ? "pause" : "play"} 
+            size={32} 
+            color="#FFF" 
+          />
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={styles.addButton}
+          onPress={handleAdd}
+        >
+          <Icon name="plus" size={24} color="#00Aaff" />
+        </TouchableOpacity>
+      </View>
+
       {addState && (
-        <View>
+        <View style={styles.playlistContainer}>
+          <Text style={styles.playlistTitle}>Add to Playlist</Text>
           <FlatList
             data={playlistData}
             keyExtractor={(playlist) => playlist.playlistID.toString()}
             renderItem={({ item }) => (
-              <View onTouchEnd={() => handleAddPlaylist(item.playlistID)}>
-                <Text style={styles.playlistItem}>{item.playlistName}</Text>
-              </View>
+              <TouchableOpacity 
+                style={styles.playlistItem}
+                onPress={() => handleAddPlaylist(item.playlistID)}
+              >
+                <Text style={styles.playlistItemText}>{item.playlistName}</Text>
+              </TouchableOpacity>
             )}
           />
         </View>
@@ -108,11 +224,6 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     zIndex: 1,
   },
-  backButtonText: {
-    color: '#00Aaff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
   trackArt: {
     width: 250,
     height: 250,
@@ -128,6 +239,15 @@ const styles = StyleSheet.create({
     shadowRadius: 4.65,
     elevation: 8,
   },
+  trackArtText: {
+    fontSize: 72,
+    color: '#00Aaff',
+    fontWeight: 'bold',
+  },
+  infoContainer: {
+    alignItems: 'center',
+    marginBottom: 40,
+  },
   trackName: {
     color: '#fff',
     fontSize: 24,
@@ -138,23 +258,67 @@ const styles = StyleSheet.create({
   artistName: {
     color: '#888',
     fontSize: 18,
-    marginBottom: 30,
     textAlign: 'center',
+  },
+  controls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 30,
+  },
+  playButton: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#00Aaff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 20,
+  },
+  disabledButton: {
+    opacity: 0.5,
+  },
+  addButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#1e1e1e',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  playlistContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#1e1e1e',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+    maxHeight: '50%',
+  },
+  playlistTitle: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 15,
+  },
+  playlistItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    backgroundColor: '#2a2a2a',
+    marginVertical: 4,
+    borderRadius: 8,
+  },
+  playlistItemText: {
+    color: '#fff',
+    fontSize: 16,
   },
   noTracksText: {
     color: '#fff',
     textAlign: 'center',
     marginTop: 50,
     fontSize: 18,
-  },
-  playlistItem: {
-    color: '#fff',
-    fontSize: 16,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    backgroundColor: '#1e1e1e',
-    marginVertical: 4,
-    borderRadius: 8,
   },
 });
 

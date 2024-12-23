@@ -1,8 +1,8 @@
-import { View, Text, StyleSheet, FlatList } from 'react-native'
-import React, { useContext } from 'react'
-import { AudioListContext } from './context/AudioTracksContext'
+import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import React, { useContext } from 'react';
+import { AudioListContext } from './context/AudioTracksContext';
 
-export default function index() {
+export default function Home() {
   const tracks = useContext(AudioListContext);
 
   if (!tracks) {
@@ -13,25 +13,31 @@ export default function index() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Featured Tracks</Text>
+      {/* Hero Section */}
+      <View style={styles.hero}>
+        <Text style={styles.heroText}>Discover Your Soundtrack</Text>
+        <TouchableOpacity style={styles.heroButton}>
+          <Text style={styles.heroButtonText}>Start Listening</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Featured Tracks */}
+      <Text style={styles.sectionHeader}>Featured Tracks</Text>
       <FlatList
         data={audioList}
         keyExtractor={(item) => item.ID.toString()}
         renderItem={({ item }) => (
-          <View style={styles.trackCard}>
-            <View style={styles.trackArt}>
-              <Text style={styles.trackArtText}>{item.trackName[0]}</Text>
-            </View>
+          <TouchableOpacity style={styles.trackCard}>
             <View style={styles.trackInfo}>
               <Text style={styles.trackName}>{item.trackName}</Text>
               <Text style={styles.artistName}>{item.artist}</Text>
             </View>
-          </View>
+          </TouchableOpacity>
         )}
         showsVerticalScrollIndicator={false}
       />
     </View>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
@@ -40,39 +46,44 @@ const styles = StyleSheet.create({
     backgroundColor: '#121212',
     padding: 20,
   },
-  header: {
+  hero: {
+    marginBottom: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  heroText: {
     color: '#fff',
     fontSize: 28,
     fontWeight: 'bold',
-    marginBottom: 20,
-    letterSpacing: 0.5,
+    marginBottom: 15,
+    textAlign: 'center',
+  },
+  heroButton: {
+    backgroundColor: '#00Aaff',
+    padding: 15,
+    borderRadius: 8,
+  },
+  heroButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  sectionHeader: {
+    color: '#fff',
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 15,
   },
   trackCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#1e1e1e',
     padding: 15,
-    borderRadius: 12,
+    borderRadius: 8,
+    backgroundColor: '#1e1e1e',
     marginBottom: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
-  },
-  trackArt: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#00Aaff',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 15,
-  },
-  trackArtText: {
-    color: '#fff',
-    fontSize: 24,
-    fontWeight: 'bold',
   },
   trackInfo: {
     flex: 1,

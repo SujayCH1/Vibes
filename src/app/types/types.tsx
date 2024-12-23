@@ -34,6 +34,17 @@ export type PlayListProviderProps = {
   children: ReactNode; 
 };
 
+//currentMusic context types
+
+export type CurrentMusicContextType = {
+  currentMusic: AudioTrack
+  setCurrentMusic: Dispatch<SetStateAction<AudioTrack>>
+}
+
+export type CurrentMusicProviderProps = {
+  children: ReactNode
+}
+
 // route params
 export type PlayerRouteParams = {
   trackID: number;

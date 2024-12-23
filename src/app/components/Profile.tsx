@@ -97,6 +97,7 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     marginBottom: 25,
+    marginTop: 15
   },
   input: {
     height: 55,
@@ -118,7 +119,7 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: '#1e1e1e',
     borderRadius: 12,
-    marginBottom: 12,
+    marginTop: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,

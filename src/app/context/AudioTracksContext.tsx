@@ -2,10 +2,10 @@ import { createContext, useState } from 'react'
 import { AudioListContextType, AudioTrack, AudioListProviderProps } from '../types/types'
 
 const AudioTracks: AudioTrack[] = [
-  { trackUrl: 'url1', trackName: 'track1', artist: 'artist1', ID: 1 },
-  { trackUrl: 'url2', trackName: 'track2', artist: 'artist2', ID: 2 },
-  { trackUrl: 'url3', trackName: 'track3', artist: 'artist3', ID: 3 },
-  { trackUrl: 'url4', trackName: 'track4', artist: 'artist4', ID: 4 },
+  { trackUrl: require('../../../assets/DrSparklesHowtoWritean80sSitcom.mp3'), trackName: 'How to Write an 80s Sitcom', artist: 'Dr Sparkles', ID: 1},
+  { trackUrl: require('../../../assets/HoliznaCC0MutantClub.mp3'), trackName: 'Mutant Club', artist: 'Holizna CC0', ID: 2 },
+  { trackUrl: require('../../../assets/ZaneLittleAlwaysandForever.mp3'), trackName: 'Always and Forever', artist: 'Zane Little', ID: 3 },
+  { trackUrl: require('../../../assets/ZaneLittleGotaFeeling.mp3'), trackName: 'Got a Feeling', artist: 'Zane Little', ID: 4 },
   { trackUrl: 'url5', trackName: 'track5', artist: 'artist5', ID: 5 },
   { trackUrl: 'url6', trackName: 'track6', artist: 'artist6', ID: 6 },
   { trackUrl: 'url7', trackName: 'track7', artist: 'artist7', ID: 7 },
