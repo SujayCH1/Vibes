@@ -1,50 +1,28 @@
-# Welcome to your Expo app 👋
+# **Music App**
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A React Native-based music application that allows users to explore tracks, search for music, manage playlists, and play audio tracks. This app features a modern UI with components such as a homepage, search functionality, a playlist manager, and an audio player.
 
-## Get started
+---
 
-1. Install dependencies
+## **Features**
 
-   ```bash
-   npm install
-   ```
+- 🎵 **Explore Tracks**: Discover a curated list of tracks.
+- 🔍 **Search**: Quickly find tracks by name or artist.
+- 🎧 **Audio Player**: Play and pause tracks with smooth controls.
+- 📋 **Playlists**: Create and manage playlists for personalized listening.
+- 🌙 **Dark Mode**: A sleek, modern dark-themed UI.
 
-2. Start the app
+---
 
-   ```bash
-    npx expo start
-   ```
+## **Technologies Used**
 
-In the output, you'll find options to open the app in a
+- **React Native**: For building the mobile app.
+- **Expo**: To streamline development and testing.
+- **React Context API**: For managing global states such as playlists and tracks.
+- **React Native Vector Icons**: For UI icons.
+- **React Native Safe Area Context**: For safe rendering on different devices.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+---
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## **Demo part 1** 
+https://youtu.be/wWUa2XA10tg
