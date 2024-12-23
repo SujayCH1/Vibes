@@ -24,12 +24,12 @@ const Profile = () => {
         {
           playlistID,
           playlistName,
-          Playlist: [], // Assuming the playlist will hold song data
+          Playlist: [], 
         },
       ]);
-      setPlaylistID(playlistID + 1); // Increment ID for the next playlist
-      setPlaylistName(''); // Reset playlist name input
-      setCreateState(false); // Close input field after adding playlist
+      setPlaylistID(playlistID + 1); 
+      setPlaylistName(''); 
+      setCreateState(false); 
     } else {
       alert('Please enter a valid playlist name.');
     }
@@ -38,7 +38,7 @@ const Profile = () => {
   const handlePlaylistClick = (PID: number) => {
     router.push({
       pathname: '/components/PlaylistComp',
-      params: { PID: PID }, // Use correct param name
+      params: { PID: PID }, 
     });
   };
 
