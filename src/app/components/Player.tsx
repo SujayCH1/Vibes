@@ -1,5 +1,5 @@
-import { FlatList, StyleSheet, Text, View, TouchableOpacity } from 'react-native';
-import React, { useContext, useEffect, useState } from 'react';
+import { FlatList, StyleSheet, Text, View, TouchableOpacity, Animated, Dimensions } from 'react-native';
+import React, { useContext, useEffect, useState, useRef } from 'react';
 import { AudioListContext } from '../context/AudioTracksContext';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import { PlayerRouteParams, AudioTrack } from '../types/types';
@@ -7,6 +7,9 @@ import { PlaylistContext } from '../context/PlaylistContext';
 import { Audio } from 'expo-av';
 import Icon from 'react-native-vector-icons/Feather';
 import { router } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
+
+const { width, height } = Dimensions.get('window');
 
 const Player = () => {
   const route = useRoute<RouteProp<{ params: PlayerRouteParams }, 'params'>>();
@@ -19,6 +22,39 @@ const Player = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTrackID, setCurrentTrackID] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  
+  const slideAnim = useRef(new Animated.Value(0)).current;
+  const rotateAnim = useRef(new Animated.Value(0)).current;
+  
+
+  useEffect(() => {
+    if (isPlaying) {
+      Animated.loop(
+        Animated.timing(rotateAnim, {
+          toValue: 1,
+          duration: 10000,
+          useNativeDriver: true,
+        })
+      ).start();
+    } else {
+      rotateAnim.setValue(0);
+    }
+  }, [isPlaying]);
+
+  useEffect(() => {
+    if (addState) {
+      Animated.spring(slideAnim, {
+        toValue: 1,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      Animated.spring(slideAnim, {
+        toValue: 0,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [addState]);
+
 
   useEffect(() => {
     const initAudio = async () => {
@@ -191,22 +227,61 @@ const Player = () => {
     }
   };
 
+  const spin = rotateAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
+
+  const slideUp = slideAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [height, 0],
+  });
+
   return (
-    <View style={styles.container}>
-      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+    <LinearGradient
+      colors={['#1e1e1e', '#121212']}
+      style={styles.container}
+    >
+      <TouchableOpacity 
+        onPress={() => navigation.goBack()} 
+        style={styles.backButton}
+      >
         <Icon name="chevron-left" size={24} color="#00Aaff" />
       </TouchableOpacity>
 
-      <View style={styles.trackArt}>
-        <Text style={styles.trackArtText}>{playTrack.trackName[0]}</Text>
-      </View>
+      <Animated.View 
+        style={[
+          styles.trackArt,
+          { transform: [{ rotate: spin }] }
+        ]}
+      >
+        <LinearGradient
+          colors={['#00Aaff', '#0088cc']}
+          style={styles.trackArtInner}
+        >
+          <Text style={styles.trackArtText}>{playTrack?.trackName[0]}</Text>
+        </LinearGradient>
+      </Animated.View>
 
       <View style={styles.infoContainer}>
-        <Text style={styles.trackName}>{playTrack.trackName}</Text>
-        <Text style={styles.artistName}>{playTrack.artist}</Text>
+        <Text style={styles.trackName} numberOfLines={1}>
+          {playTrack?.trackName}
+        </Text>
+        <Text style={styles.artistName} numberOfLines={1}>
+          {playTrack?.artist}
+        </Text>
       </View>
 
       <View style={styles.controls}>
+        {PID !== undefined && (
+          <TouchableOpacity
+            style={styles.controlButton}
+            onPress={handlePrev}
+          >
+            <Icon name="skip-back" size={24} color="#fff" />
+          </TouchableOpacity>
+        )}
+
         <TouchableOpacity
           style={[styles.playButton, isLoading && styles.disabledButton]}
           onPress={handlePlayPause}
@@ -219,50 +294,50 @@ const Player = () => {
           />
         </TouchableOpacity>
 
-        {PID == undefined ? (
+        {PID !== undefined ? (
           <TouchableOpacity
-            style={styles.addButton}
-            onPress={handleAdd}
+            style={styles.controlButton}
+            onPress={() => handleNext()}
           >
-            <Icon name="plus" size={24} color="#00Aaff" />
+            <Icon name="skip-forward" size={24} color="#fff" />
           </TouchableOpacity>
         ) : (
-          <View>
-            <TouchableOpacity
-              style={styles.addButton}
-              onPress={() => handlePrev()}
-            >
-              <Icon name="arrow-left" size={24} color="#00Aaff" />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.addButton}
-              onPress={() => handleNext(playTrack.ID)}
-            >
-              <Icon name="arrow-right" size={24} color="#00Aaff" />
-            </TouchableOpacity>
-          </View>
-
+          <TouchableOpacity
+            style={styles.controlButton}
+            onPress={handleAdd}
+          >
+            <Icon name="plus" size={24} color="#fff" />
+          </TouchableOpacity>
         )}
       </View>
 
-      {addState && (
-        <View style={styles.playlistContainer}>
+      <Animated.View 
+        style={[
+          styles.playlistContainer,
+          { transform: [{ translateY: slideUp }] }
+        ]}
+      >
+        <View style={styles.playlistHeader}>
           <Text style={styles.playlistTitle}>Add to Playlist</Text>
-          <FlatList
-            data={playlistData}
-            keyExtractor={(playlist) => playlist.playlistID.toString()}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.playlistItem}
-                onPress={() => handleAddPlaylist(item.playlistID)}
-              >
-                <Text style={styles.playlistItemText}>{item.playlistName}</Text>
-              </TouchableOpacity>
-            )}
-          />
+          <TouchableOpacity onPress={() => setAddState(false)}>
+            <Icon name="x" size={24} color="#fff" />
+          </TouchableOpacity>
         </View>
-      )}
-    </View>
+        <FlatList
+          data={playlistData}
+          keyExtractor={(playlist) => playlist.playlistID.toString()}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              style={styles.playlistItem}
+              onPress={() => handleAddPlaylist(item.playlistID)}
+            >
+              <Text style={styles.playlistItemText}>{item.playlistName}</Text>
+              <Icon name="plus" size={20} color="#00Aaff" />
+            </TouchableOpacity>
+          )}
+        />
+      </Animated.View>
+    </LinearGradient>
   );
 };
 
@@ -271,7 +346,6 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: 30,
     paddingHorizontal: 20,
-    backgroundColor: '#121212',
     alignItems: 'center',
   },
   backButton: {
@@ -279,33 +353,39 @@ const styles = StyleSheet.create({
     top: 30,
     left: 20,
     padding: 12,
-    backgroundColor: '#1e1e1e',
+    backgroundColor: 'rgba(255,255,255,0.1)',
     borderRadius: 30,
     zIndex: 1,
   },
   trackArt: {
-    width: 250,
-    height: 250,
-    borderRadius: 125,
-    backgroundColor: '#1e1e1e',
+    width: width * 0.7,
+    height: width * 0.7,
+    borderRadius: width * 0.35,
+    marginTop: 80,
+    marginBottom: 40,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.44,
+    shadowRadius: 10.32,
+    elevation: 16,
+  },
+  trackArtInner: {
+    width: '100%',
+    height: '100%',
+    borderRadius: width * 0.35,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 60,
-    marginBottom: 30,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4.65,
-    elevation: 8,
   },
   trackArtText: {
-    fontSize: 72,
-    color: '#00Aaff',
+    fontSize: width * 0.2,
+    color: '#fff',
     fontWeight: 'bold',
   },
   infoContainer: {
+    width: '100%',
     alignItems: 'center',
     marginBottom: 40,
+    paddingHorizontal: 20,
   },
   trackName: {
     color: '#fff',
@@ -315,7 +395,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   artistName: {
-    color: '#888',
+    color: 'rgba(255,255,255,0.7)',
     fontSize: 18,
     textAlign: 'center',
   },
@@ -323,7 +403,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 30,
+    width: '100%',
+    paddingHorizontal: 20,
+  },
+  controlButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 20,
   },
   playButton: {
     width: 64,
@@ -332,18 +422,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#00Aaff',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 20,
+    shadowColor: '#00Aaff',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+    elevation: 8,
   },
   disabledButton: {
     opacity: 0.5,
-  },
-  addButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#1e1e1e',
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   playlistContainer: {
     position: 'absolute',
@@ -355,29 +441,36 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 20,
     padding: 20,
     maxHeight: '50%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  playlistHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15,
   },
   playlistTitle: {
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 15,
   },
   playlistItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingVertical: 12,
     paddingHorizontal: 20,
-    backgroundColor: '#2a2a2a',
+    backgroundColor: 'rgba(255,255,255,0.05)',
     marginVertical: 4,
     borderRadius: 8,
   },
   playlistItemText: {
     color: '#fff',
     fontSize: 16,
-  },
-  noTracksText: {
-    color: '#fff',
-    textAlign: 'center',
-    marginTop: 50,
-    fontSize: 18,
   },
 });
 
