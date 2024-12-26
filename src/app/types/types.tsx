@@ -48,4 +48,5 @@ export type CurrentMusicProviderProps = {
 // route params
 export type PlayerRouteParams = {
   trackID: number;
+  PID: number | undefined
 };

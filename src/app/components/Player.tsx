@@ -6,10 +6,11 @@ import { PlayerRouteParams, AudioTrack } from '../types/types';
 import { PlaylistContext } from '../context/PlaylistContext';
 import { Audio } from 'expo-av';
 import Icon from 'react-native-vector-icons/Feather';
+import { router } from 'expo-router';
 
 const Player = () => {
   const route = useRoute<RouteProp<{ params: PlayerRouteParams }, 'params'>>();
-  const { trackID } = route.params;
+  const { trackID, PID } = route.params;
   const navigation = useNavigation();
   const tracks = useContext(AudioListContext);
   const [addState, setAddState] = useState(false);
@@ -150,6 +151,46 @@ const Player = () => {
     setAddState(false);
   };
 
+  const handleNext = () => {
+    if (PID === undefined) return; // Exit if no playlist ID
+  
+    const selectedPlaylist = playlists.playlists.find((playlist) => playlist.playlistID == PID);
+    if (!selectedPlaylist || !selectedPlaylist.Playlist) return; // Exit if no playlist or no tracks
+  
+    const currentTrackIndex = selectedPlaylist.Playlist.findIndex((track) => track.ID == currentTrackID);
+    const nextTrackIndex = currentTrackIndex + 1;
+  
+    // Check if next track exists in the playlist
+    if (nextTrackIndex < selectedPlaylist.Playlist.length) {
+      const nextTrack = selectedPlaylist.Playlist[nextTrackIndex];
+      setCurrentTrackID(nextTrack.ID);
+      router.navigate({
+        pathname: '/components/Player',
+        params: { trackID: nextTrack.ID, PID },
+      });
+    }
+  };
+  
+  const handlePrev = () => {
+    if (PID === undefined) return; // Exit if no playlist ID
+  
+    const selectedPlaylist = playlists.playlists.find((playlist) => playlist.playlistID == PID);
+    if (!selectedPlaylist || !selectedPlaylist.Playlist) return; // Exit if no playlist or no tracks
+  
+    const currentTrackIndex = selectedPlaylist.Playlist.findIndex((track) => track.ID == currentTrackID);
+    const prevTrackIndex = currentTrackIndex - 1;
+  
+    // Check if previous track exists in the playlist
+    if (prevTrackIndex >= 0) {
+      const prevTrack = selectedPlaylist.Playlist[prevTrackIndex];
+      setCurrentTrackID(prevTrack.ID);
+      router.navigate({
+        pathname: '/components/Player',
+        params: { trackID: prevTrack.ID, PID },
+      });
+    }
+  };
+
   return (
     <View style={styles.container}>
       <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
@@ -166,24 +207,42 @@ const Player = () => {
       </View>
 
       <View style={styles.controls}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[styles.playButton, isLoading && styles.disabledButton]}
           onPress={handlePlayPause}
           disabled={isLoading}
         >
-          <Icon 
-            name={isPlaying ? "pause" : "play"} 
-            size={32} 
-            color="#FFF" 
+          <Icon
+            name={isPlaying ? "pause" : "play"}
+            size={32}
+            color="#FFF"
           />
         </TouchableOpacity>
 
-        <TouchableOpacity 
-          style={styles.addButton}
-          onPress={handleAdd}
-        >
-          <Icon name="plus" size={24} color="#00Aaff" />
-        </TouchableOpacity>
+        {PID == undefined ? (
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={handleAdd}
+          >
+            <Icon name="plus" size={24} color="#00Aaff" />
+          </TouchableOpacity>
+        ) : (
+          <View>
+            <TouchableOpacity
+              style={styles.addButton}
+              onPress={() => handlePrev()}
+            >
+              <Icon name="arrow-left" size={24} color="#00Aaff" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.addButton}
+              onPress={() => handleNext(playTrack.ID)}
+            >
+              <Icon name="arrow-right" size={24} color="#00Aaff" />
+            </TouchableOpacity>
+          </View>
+
+        )}
       </View>
 
       {addState && (
@@ -193,7 +252,7 @@ const Player = () => {
             data={playlistData}
             keyExtractor={(playlist) => playlist.playlistID.toString()}
             renderItem={({ item }) => (
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.playlistItem}
                 onPress={() => handleAddPlaylist(item.playlistID)}
               >

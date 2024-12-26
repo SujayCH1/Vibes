@@ -26,7 +26,7 @@ const PlaylistComp = () => {
   const handleTrackTouch = (trackID: number) => {
     router.push({
       pathname: '/components/Player',
-      params: { trackID: trackID }
+      params: { trackID: trackID, PID: PID }
     });
   };
 
