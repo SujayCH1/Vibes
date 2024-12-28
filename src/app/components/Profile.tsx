@@ -1,18 +1,17 @@
-import { View, Text, TextInput, FlatList, StyleSheet, Animated, Pressable, Button, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, FlatList, StyleSheet, Animated, Pressable, Button, TouchableOpacity, Alert } from 'react-native';
 import React, { useContext, useState, useRef, useEffect } from 'react';
 import { PlaylistContext } from '../context/PlaylistContext';
 import { useNavigation, useRouter } from 'expo-router';
 import Icon from 'react-native-vector-icons/Feather';
+import { PlaylistItemProps } from '../types/types';
 
-// Separate playlist item component for animations
-const PlaylistItem = React.memo(({
+
+
+const PlaylistItem: React.FC<PlaylistItemProps> = React.memo(({
   item,
   index,
-  onPress
-}: {
-  item: any;
-  index: number;
-  onPress: () => void;
+  onPress,
+  onDelete
 }) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -24,6 +23,24 @@ const PlaylistItem = React.memo(({
       useNativeDriver: true,
     }).start();
   }, [index]);
+
+  const handleDelete = () => {
+    Alert.alert(
+      "Delete Playlist",
+      `Are you sure you want to delete "${item.playlistName}"?`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "Delete",
+          onPress: onDelete,
+          style: "destructive"
+        }
+      ]
+    );
+  };
 
   return (
     <Animated.View
@@ -55,6 +72,16 @@ const PlaylistItem = React.memo(({
             {item.Playlist.length} {item.Playlist.length === 1 ? 'track' : 'tracks'}
           </Text>
         </View>
+        <Pressable
+          onPress={handleDelete}
+          style={({ pressed }) => [
+            styles.deleteButton,
+            pressed && styles.deleteButtonPressed
+          ]}
+          hitSlop={8}
+        >
+          <Icon name="trash-2" size={20} color="#ff4444" />
+        </Pressable>
         <Icon name="chevron-right" size={20} color="#666" style={styles.chevron} />
       </Pressable>
     </Animated.View>
@@ -68,8 +95,6 @@ const Profile = () => {
   const router = useRouter();
   const titleFadeAnim = useRef(new Animated.Value(0)).current;
   const createButtonAnim = useRef(new Animated.Value(1)).current;
-  const navigation = useNavigation();
-
 
   const Playlists = useContext(PlaylistContext);
 
@@ -117,6 +142,10 @@ const Profile = () => {
     });
   };
 
+  const handleDeletePlaylist = (playlistID: number) => {
+    setPlaylists(playlists.filter(playlist => playlist.playlistID !== playlistID));
+  };
+
   const toggleCreateState = () => {
     Animated.sequence([
       Animated.timing(createButtonAnim, {
@@ -134,12 +163,6 @@ const Profile = () => {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity
-        onPress={() => navigation.goBack()}
-        style={styles.backButton}
-      >
-        <Icon name="chevron-left" size={24} color="#00Aaff" />
-      </TouchableOpacity>
       <Animated.Text style={[styles.title, { opacity: titleFadeAnim }]}>
         Your Playlists
       </Animated.Text>
@@ -206,6 +229,7 @@ const Profile = () => {
               item={item}
               index={index}
               onPress={() => handlePlaylistClick(item.playlistID)}
+              onDelete={() => handleDeletePlaylist(item.playlistID)}
             />
           )}
           showsVerticalScrollIndicator={false}
@@ -230,6 +254,7 @@ const styles = StyleSheet.create({
     marginBottom: 25,
     letterSpacing: 0.5,
     fontFamily: 'System',
+    left: 70,
   },
   inputContainer: {
     marginBottom: 25,
@@ -384,14 +409,12 @@ const styles = StyleSheet.create({
   listContent: {
     paddingBottom: 20,
   },
-  backButton: {
-    position: 'absolute',
-    top: 30,
-    left: 20,
-    padding: 12,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 30,
-    zIndex: 1,
+  deleteButton: {
+    padding: 8,
+    marginRight: 8,
+  },
+  deleteButtonPressed: {
+    opacity: 0.7,
   },
 });
 

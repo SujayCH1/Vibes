@@ -22,7 +22,6 @@ const Player = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTrackID, setCurrentTrackID] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-
   const slideAnim = useRef(new Animated.Value(0)).current;
   const rotateAnim = useRef(new Animated.Value(0)).current;
 
@@ -242,6 +241,12 @@ const Player = () => {
       colors={['#1e1e1e', '#121212']}
       style={styles.container}
     >
+      <TouchableOpacity
+        onPress={() => navigation.goBack()}
+        style={styles.backButton}
+      >
+        <Icon name="chevron-left" size={24} color="#00Aaff" />
+      </TouchableOpacity>
       <Animated.View
         style={[
           styles.trackArt,
@@ -340,15 +345,6 @@ const styles = StyleSheet.create({
     paddingTop: 30,
     paddingHorizontal: 20,
     alignItems: 'center',
-  },
-  backButton: {
-    position: 'absolute',
-    top: 30,
-    left: 20,
-    padding: 12,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 30,
-    zIndex: 1,
   },
   trackArt: {
     width: width * 0.7,
@@ -464,6 +460,15 @@ const styles = StyleSheet.create({
   playlistItemText: {
     color: '#fff',
     fontSize: 16,
+  },
+  backButton: {
+    position: 'absolute',
+    top: 20,
+    left: 20,
+    padding: 12,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 30,
+    zIndex: 1,
   },
 });
 

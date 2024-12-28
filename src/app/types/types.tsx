@@ -50,3 +50,11 @@ export type PlayerRouteParams = {
   trackID: number;
   PID: number | undefined
 };
+
+// profile
+export type PlaylistItemProps =  {
+  item: Playlist;
+  index: number;
+  onPress: () => void;
+  onDelete: () => void;
+}
