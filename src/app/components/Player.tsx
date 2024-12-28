@@ -22,10 +22,10 @@ const Player = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTrackID, setCurrentTrackID] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const slideAnim = useRef(new Animated.Value(0)).current;
   const rotateAnim = useRef(new Animated.Value(0)).current;
-  
+
 
   useEffect(() => {
     if (isPlaying) {
@@ -189,13 +189,13 @@ const Player = () => {
 
   const handleNext = () => {
     if (PID === undefined) return; // Exit if no playlist ID
-  
+
     const selectedPlaylist = playlists.playlists.find((playlist) => playlist.playlistID == PID);
     if (!selectedPlaylist || !selectedPlaylist.Playlist) return; // Exit if no playlist or no tracks
-  
+
     const currentTrackIndex = selectedPlaylist.Playlist.findIndex((track) => track.ID == currentTrackID);
     const nextTrackIndex = currentTrackIndex + 1;
-  
+
     // Check if next track exists in the playlist
     if (nextTrackIndex < selectedPlaylist.Playlist.length) {
       const nextTrack = selectedPlaylist.Playlist[nextTrackIndex];
@@ -206,16 +206,16 @@ const Player = () => {
       });
     }
   };
-  
+
   const handlePrev = () => {
     if (PID === undefined) return; // Exit if no playlist ID
-  
+
     const selectedPlaylist = playlists.playlists.find((playlist) => playlist.playlistID == PID);
     if (!selectedPlaylist || !selectedPlaylist.Playlist) return; // Exit if no playlist or no tracks
-  
+
     const currentTrackIndex = selectedPlaylist.Playlist.findIndex((track) => track.ID == currentTrackID);
     const prevTrackIndex = currentTrackIndex - 1;
-  
+
     // Check if previous track exists in the playlist
     if (prevTrackIndex >= 0) {
       const prevTrack = selectedPlaylist.Playlist[prevTrackIndex];
@@ -242,14 +242,7 @@ const Player = () => {
       colors={['#1e1e1e', '#121212']}
       style={styles.container}
     >
-      <TouchableOpacity 
-        onPress={() => navigation.goBack()} 
-        style={styles.backButton}
-      >
-        <Icon name="chevron-left" size={24} color="#00Aaff" />
-      </TouchableOpacity>
-
-      <Animated.View 
+      <Animated.View
         style={[
           styles.trackArt,
           { transform: [{ rotate: spin }] }
@@ -311,7 +304,7 @@ const Player = () => {
         )}
       </View>
 
-      <Animated.View 
+      <Animated.View
         style={[
           styles.playlistContainer,
           { transform: [{ translateY: slideUp }] }
