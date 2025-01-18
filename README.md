@@ -24,5 +24,5 @@ A React Native-based music application that allows users to explore tracks, sear
 
 ---
 
-## **Demo part 1** 
-https://youtu.be/wWUa2XA10tg
+## **Demo ** 
+https://youtu.be/5ji6EntRK7k
